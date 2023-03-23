@@ -36,105 +36,50 @@
             </tr>
             </thead>
             <tbody id="table-body">
-            <?php
-            // Connect to database
-            $conn = mysqli_connect('localhost', 'root', '', 'toxicity');
-            if (!$conn) {
-                die('Connection failed: ' . mysqli_connect_error());
-            }
+            <script>
+                // Get the search term from the URL
+                const searchParams = new URLSearchParams(window.location.search);
+                const searchTerm = searchParams.get('search');
 
-            // Set default sort order
-            $order = isset($_GET['order']) ? $_GET['order'] : 'asc';
+                // Set default sort order
+                let order = searchParams.get('order') || 'asc';
 
-            // Set limit and offset
-            $limit = 200;
-            $offset = isset($_GET['offset']) ? $_GET['offset'] : 0;
+                // Set limit and offset
+                const limit = 200;
+                let offset = 0;
 
-            // Get messages and their toxicity level
-            $sql = "SELECT Name, commenttext, toxic FROM messagestable ORDER BY toxic $order LIMIT $limit OFFSET $offset";
-            $result = mysqli_query($conn, $sql);
-            // Set default values
-            $searchTerm = '';
-            $whereClause = '';
+                // Construct the URL for loading more results
+                const url = `data.php?order=${order}&offset=${offset}&search=${searchTerm}`;
 
-            // Check if a search term was submitted
-            if (isset($_GET['search'])) {
-                // Sanitize the search term to prevent SQL injection
-                $searchTerm = mysqli_real_escape_string($conn, $_GET['search']);
-                // Add the search term to the WHERE clause
-                $whereClause = "WHERE Name LIKE '%$searchTerm%' OR commenttext LIKE '%$searchTerm%'";
-            }
-
-            // Set default sort order
-            $order = isset($_GET['order']) ? $_GET['order'] : 'asc';
-
-            // Set limit and offset
-            $limit = 200;
-            $offset = isset($_GET['offset']) ? $_GET['offset'] : 0;
-
-            // Get messages and their toxicity level
-            $sql = "SELECT Name, commenttext, toxic FROM messagestable $whereClause ORDER BY toxic $order LIMIT $limit OFFSET $offset";
-            $result = mysqli_query($conn, $sql);
-
-            if (mysqli_num_rows($result) > 0) {
-                // Output data of each row
-                while($row = mysqli_fetch_assoc($result)) {
-                    echo "<tr>";
-                    echo "<td>" . $row["Name"] . "</td>";
-                    echo "<td>" . $row["commenttext"] . "</td>";
-                    echo "<td>" . $row["toxic"] . "</td>";
-                    echo "</tr>";
-                }
-            } else {
-                echo "<tr><td colspan='3'>0 results</td></tr>";
-            }
-
-            // Close the database connection
-            mysqli_close($conn);
-            ?>
+                // Fetch the data from the data.php file
+                fetch(url)
+                    .then(response => response.text())
+                    .then(html => {
+                        // Create a new temporary div to store the response HTML
+                        const tempDiv = document.createElement("div");
+                        tempDiv.innerHTML = html;
+                        // Get the rows from the temporary div
+                        const rows = tempDiv.querySelectorAll("#table-body tr");
+                        // Get the table body element
+                        const tableBody = document.getElementById("table-body");
+                        // Add the rows to the table body
+                        for (let i = 0; i < rows.length; i++) {
+                            tableBody.appendChild(rows[i]);
+                        }
+                        // Add the "Load More" button if necessary
+                        if (rows.length >= limit) {
+                            tableBody.parentNode.appendChild(document.createElement("button"))
+                                .setAttribute("id", "load-more-btn");
+                        }
+                    })
+                    .catch(error => {
+                        console.error(error);
+                    });
+            </script>
             </tbody>
         </table>
-        <?php if (mysqli_num_rows($result) >= $limit): ?>
-            <button id="load-more-btn">Load More</button>
-        <?php endif; ?>
-        <script>
-            // Get the search term from the URL
-            const searchParams = new URLSearchParams(window.location.search);
-            const searchTerm = searchParams.get('search');
-
-            // Construct the URL for loading more results
-            const url = window.location.href.split("?")[0] + `?order=<?php echo $order ?>&offset=${offset}&search=${searchTerm}`;
-            // Add event listener to the "Load More" button
-            const loadMoreBtn = document.getElementById("load-more-btn");
-            if (loadMoreBtn) {
-                loadMoreBtn.addEventListener("click", () => {
-                    const tableBody = document.getElementById("table-body");
-                    const offset = tableBody.getElementsByTagName("tr").length - 1;
-                    const url = window.location.href.split("?")[0] + `?order=<?php echo $order ?>&offset=${offset}`;
-                    fetch(url)
-                        .then(response => response.text())
-                        .then(html => {
-                            // Create a new temporary div to store the response HTML
-                            const tempDiv = document.createElement("div");
-                            tempDiv.innerHTML = html;
-                            // Get the new rows from the temporary div
-                            const newRows = tempDiv.querySelectorAll("#table-body tr");
-                            // Remove the old "Load More" button
-                            loadMoreBtn.parentNode.removeChild(loadMoreBtn);
-                            // Append the new rows to the table
-                            for (let i = 0; i < newRows.length; i++) {
-                                tableBody.appendChild(newRows[i]);
-                            }
-                            // Add a new "Load More" button if there are more results
-                            const newLoadMoreBtn = tempDiv.querySelector("#load-more-btn");
-                            if (newLoadMoreBtn) {
-                                tableBody.parentNode.insertBefore(newLoadMoreBtn, tableBody.nextSibling);
-                            }
-                        })
-                        .catch(error => {
-                            console.error(error);
-                        });
-                });
-            }
-        </script>
+        <button id="load-more-btn">Load More</button>
     </section>
+</main>
+</body>
+</html>

@@ -21,7 +21,7 @@ try {
             $_SESSION['steamid'] = $steamid;
 
             // Authenticate the user and redirect them to the homepage.
-            header('Location: Messages.php');
+            header('Location: C:\Users\Calvi\PhpstormProjects\ToxicTF2\html\Messages.php');
         } else {
             echo 'User is not logged in.';
         }

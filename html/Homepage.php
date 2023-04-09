@@ -1,35 +1,58 @@
 <?php
-session_start();
+$wall_paper = "Product.jpg";
 
-if(isset($_GET['logout'])) {
-    session_destroy();
-    header("Location: index.php");
-    exit;
-}
-
-if(isset($_SESSION['steamid'])) {
-    // The user is already logged in. Redirect to the homepage.
-    header("Location: Messages.php");
-    exit;
-}
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Video Game Toxicity Data</title>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:400,500,700&display=swap">
-    <link rel="stylesheet" href="/CSS/Homepage.css">
+    <title>ToxicityChecker.tf</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="/CSS/Homepage.css" />
 </head>
 <body>
-<header>
-    <h1>Video Game Toxicity Data</h1>
-</header>
-<body>
-<h1>Login with Steam</h1>
-<form action="../php/authenticate.php" method="post">
-    <input type="submit" value="Login with Steam" />
-</form>
+
+<div class="top-bar">
+    <a href="Messages.php">Chat logs</a>
+    <a href="about.php">About</a>
+    <a href="">Sign in</a>
+</div>
+<style>
+    body {
+        background-image: url('<?php echo $wall_paper;?>');
+        background-position: center center;
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+        background-size: cover;
+    }
+</style>
+<div class="banner">
+    <div class="text">
+        <h1>Toxicity classification of competitive tf2 matches </h1>
+        <p>powered by BERT</p>
+    </div>
+    <div class="scroll-down" onclick="scrollDown()">
+        <i></i>
+    </div>
+</div>
+<div class="image-container">
+    <a href="https://etf2l.org/">
+        <img src="2018_etf2l_long_nobackground.png" alt="Description of the first image" />
+    </a>
+    <a href="https://www.teamfortress.com/">
+        <img src="team-fortress-2-logo (1).png" alt="Description of the second image" />
+    </a>
+    <a href="https://ai.googleblog.com/2018/11/open-sourcing-bert-state-of-art-pre.html">
+        <img src="output-onlinejpgtools (1).png" alt="Description of the third image" />
+    </a>
+</div>
+<script>
+    function scrollDown() {
+        window.scroll({
+            top: document.body.offsetHeight,
+            behavior: "smooth"
+        });
+    }
+</script>
 </body>
 </html>

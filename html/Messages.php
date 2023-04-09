@@ -1,32 +1,42 @@
-<!DOCTYPE html>
-<html lang="en">
+<?php
+$wall_paper = "Product.jpg";
+
+?>
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Video Game Toxicity Data</title>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:400,500,700&display=swap">
+    <title>ToxicityChecker.tf</title>
     <link rel="stylesheet" href="/CSS/Messages.css">
 </head>
 <body>
-<header>
-    <h1>Video Game Toxicity Data</h1>
-</header>
-<main>
-    <section class="overview">
-        <h2>Overview</h2>
-        <p>On this page, you will find data collected from video game messages that have been analyzed to determine the level of toxicity in the messages.</p>
-    </section>
-    <section class="search-bar">
-        <form method="GET">
-            <input type="text" name="search" placeholder="Search...">
-            <button type="submit">Go</button>
-        </form>
-    </section>
-    <section class="data-table">
-        <p>Sort by toxicity level:
-            <a href="?order=asc">Ascending</a>
-            <a href="?order=desc">Descending</a>
-        </p>
+<div class="top-bar">
+    <a href="Homepage.php">Homepage</a>
+    <a href="about.php">About</a>
+</div>
+<div class="banner">
+    <style>
+        body {
+            background-image: url('<?php echo $wall_paper;?>');
+            background-position: center center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            background-size: cover;
+        }
+    </style>
+</div>
+</body>
+</body>
+<section class="search-bar">
+    <form method="GET">
+        <input type="text" name="search" placeholder="Search...">
+        <button type="submit">Go</button>
+    </form>
+</section>
+<section class="data-table">
+    <p>Sort by toxicity level:
+        <a href="?order=asc">Ascending</a>
+        <a href="?order=desc">Descending</a>
+    </p>
+    <div class="table-container">
         <table>
             <thead>
             <tr>
@@ -36,50 +46,68 @@
             </tr>
             </thead>
             <tbody id="table-body">
-            <script>
-                // Get the search term from the URL
-                const searchParams = new URLSearchParams(window.location.search);
-                const searchTerm = searchParams.get('search');
+            <?php
+            // Connect to database
+            $conn = mysqli_connect('localhost', 'root', '', 'toxicity');
+            if (!$conn) {
+                die('Connection failed: ' . mysqli_connect_error());
+            }
 
-                // Set default sort order
-                let order = searchParams.get('order') || 'asc';
+            // Set default sort order
+            $order = isset($_GET['order']) ? $_GET['order'] : 'asc';
 
-                // Set limit and offset
-                const limit = 200;
-                let offset = 0;
+            // Set limit and offset
+            $limit = 50;
+            $offset = isset($_GET['offset']) ? $_GET['offset'] : 0;
 
-                // Construct the URL for loading more results
-                const url = `data.php?order=${order}&offset=${offset}&search=${searchTerm}`;
+            // Get messages and their toxicity level
+            $sql = "SELECT Name, commenttext, toxic FROM chatlogs ORDER BY toxic $order LIMIT 500";
+            $result = mysqli_query($conn, $sql);
+            echo(mysqli_num_rows($result));
 
-                // Fetch the data from the data.php file
-                fetch(url)
-                    .then(response => response.text())
-                    .then(html => {
-                        // Create a new temporary div to store the response HTML
-                        const tempDiv = document.createElement("div");
-                        tempDiv.innerHTML = html;
-                        // Get the rows from the temporary div
-                        const rows = tempDiv.querySelectorAll("#table-body tr");
-                        // Get the table body element
-                        const tableBody = document.getElementById("table-body");
-                        // Add the rows to the table body
-                        for (let i = 0; i < rows.length; i++) {
-                            tableBody.appendChild(rows[i]);
-                        }
-                        // Add the "Load More" button if necessary
-                        if (rows.length >= limit) {
-                            tableBody.parentNode.appendChild(document.createElement("button"))
-                                .setAttribute("id", "load-more-btn");
-                        }
-                    })
-                    .catch(error => {
-                        console.error(error);
-                    });
-            </script>
+            // Calculate total number of rows and pages
+            $totalRows = mysqli_num_rows($result);
+            $totalPages = ceil($totalRows / $limit);
+
+            // Set current page number
+            $currentPage = isset($_GET['page']) ? $_GET['page'] : 1;
+
+            // Calculate offset based on current page number
+            $offset = ($currentPage - 1) * $limit;
+
+            // Get messages and their toxicity level for current page
+            $sql = "SELECT Name, commenttext, toxic FROM chatlogs ORDER BY toxic $order LIMIT $limit OFFSET $offset";
+            $result = mysqli_query($conn, $sql);
+
+            if (mysqli_num_rows($result) > 0) {
+                // Output data of each row
+                while($row = mysqli_fetch_assoc($result)) {
+                    echo "<tr>";
+                    echo "<td>" . $row["Name"] . "</td>";
+                    echo "<td>" . $row["commenttext"] . "</td>";
+                    echo "<td>" . $row["toxic"] . "</td>";
+                    echo "</tr>";
+                }
+            } else {
+                echo "<tr><td colspan='3'>0 results</td></tr>";
+            }
+
+            // Generate page links
+            echo "<div class='pagination'>";
+            $startPage = max(1, $currentPage - 4);
+            $endPage = min($totalPages, $startPage + 9);
+            for ($i = $startPage; $i <= $endPage; $i++) {
+                $isActive = ($i == $currentPage) ? 'active' : '';
+                $url = "?order=$order&page=$i";
+                echo "<a class='$isActive' href='$url'> $i </a>";
+            }
+            echo "</div>";
+
+            // Close the database connection
+            mysqli_close($conn);
+            ?>
             </tbody>
         </table>
-        <button id="load-more-btn">Load More</button>
-    </section>
-</main>
-</body>
+    </div>
+</section>
 </html>

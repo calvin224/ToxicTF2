@@ -1,32 +1,42 @@
-<!DOCTYPE html>
-<html lang="en">
+<?php
+$wall_paper = "Product.jpg";
+
+?>
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Video Game Toxicity Data</title>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:400,500,700&display=swap">
+    <title>ToxicityChecker.tf</title>
     <link rel="stylesheet" href="/CSS/Messages.css">
 </head>
 <body>
-<header>
-    <h1>Video Game Toxicity Data</h1>
-</header>
-<main>
-    <section class="overview">
-        <h2>Overview</h2>
-        <p>On this page, you will find data collected from video game messages that have been analyzed to determine the level of toxicity in the messages.</p>
-    </section>
-    <section class="search-bar">
-        <form method="GET">
-            <input type="text" name="search" placeholder="Search...">
-            <button type="submit">Go</button>
-        </form>
-    </section>
-    <section class="data-table">
-        <p>Sort by toxicity level:
-            <a href="?order=asc">Ascending</a>
-            <a href="?order=desc">Descending</a>
-        </p>
+<div class="top-bar">
+    <a href="Homepage.php">Homepage</a>
+    <a href="about.php">About</a>
+</div>
+<div class="banner">
+    <style>
+        body {
+            background-image: url('<?php echo $wall_paper;?>');
+            background-position: center center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            background-size: cover;
+        }
+    </style>
+</div>
+</body>
+</body>
+<section class="search-bar">
+    <form method="GET">
+        <input type="text" name="search" placeholder="Search...">
+        <button type="submit">Go</button>
+    </form>
+</section>
+<section class="data-table">
+    <p>Sort by toxicity level:
+        <a href="?order=asc">Ascending</a>
+        <a href="?order=desc">Descending</a>
+    </p>
+    <div class="table-container">
         <table>
             <thead>
             <tr>
@@ -47,33 +57,26 @@
             $order = isset($_GET['order']) ? $_GET['order'] : 'asc';
 
             // Set limit and offset
-            $limit = 200;
+            $limit = 50;
             $offset = isset($_GET['offset']) ? $_GET['offset'] : 0;
 
             // Get messages and their toxicity level
-            $sql = "SELECT Name, commenttext, toxic FROM messagestable ORDER BY toxic $order LIMIT $limit OFFSET $offset";
+            $sql = "SELECT Name, commenttext, toxic FROM chatlogs ORDER BY toxic $order LIMIT 500";
             $result = mysqli_query($conn, $sql);
-            // Set default values
-            $searchTerm = '';
-            $whereClause = '';
+            echo(mysqli_num_rows($result));
 
-            // Check if a search term was submitted
-            if (isset($_GET['search'])) {
-                // Sanitize the search term to prevent SQL injection
-                $searchTerm = mysqli_real_escape_string($conn, $_GET['search']);
-                // Add the search term to the WHERE clause
-                $whereClause = "WHERE Name LIKE '%$searchTerm%' OR commenttext LIKE '%$searchTerm%'";
-            }
+            // Calculate total number of rows and pages
+            $totalRows = mysqli_num_rows($result);
+            $totalPages = ceil($totalRows / $limit);
 
-            // Set default sort order
-            $order = isset($_GET['order']) ? $_GET['order'] : 'asc';
+            // Set current page number
+            $currentPage = isset($_GET['page']) ? $_GET['page'] : 1;
 
-            // Set limit and offset
-            $limit = 200;
-            $offset = isset($_GET['offset']) ? $_GET['offset'] : 0;
+            // Calculate offset based on current page number
+            $offset = ($currentPage - 1) * $limit;
 
-            // Get messages and their toxicity level
-            $sql = "SELECT Name, commenttext, toxic FROM messagestable $whereClause ORDER BY toxic $order LIMIT $limit OFFSET $offset";
+            // Get messages and their toxicity level for current page
+            $sql = "SELECT Name, commenttext, toxic FROM chatlogs ORDER BY toxic $order LIMIT $limit OFFSET $offset";
             $result = mysqli_query($conn, $sql);
 
             if (mysqli_num_rows($result) > 0) {
@@ -89,52 +92,22 @@
                 echo "<tr><td colspan='3'>0 results</td></tr>";
             }
 
+            // Generate page links
+            echo "<div class='pagination'>";
+            $startPage = max(1, $currentPage - 4);
+            $endPage = min($totalPages, $startPage + 9);
+            for ($i = $startPage; $i <= $endPage; $i++) {
+                $isActive = ($i == $currentPage) ? 'active' : '';
+                $url = "?order=$order&page=$i";
+                echo "<a class='$isActive' href='$url'> $i </a>";
+            }
+            echo "</div>";
+
             // Close the database connection
             mysqli_close($conn);
             ?>
             </tbody>
         </table>
-        <?php if (mysqli_num_rows($result) >= $limit): ?>
-            <button id="load-more-btn">Load More</button>
-        <?php endif; ?>
-        <script>
-            // Get the search term from the URL
-            const searchParams = new URLSearchParams(window.location.search);
-            const searchTerm = searchParams.get('search');
-
-            // Construct the URL for loading more results
-            const url = window.location.href.split("?")[0] + `?order=<?php echo $order ?>&offset=${offset}&search=${searchTerm}`;
-            // Add event listener to the "Load More" button
-            const loadMoreBtn = document.getElementById("load-more-btn");
-            if (loadMoreBtn) {
-                loadMoreBtn.addEventListener("click", () => {
-                    const tableBody = document.getElementById("table-body");
-                    const offset = tableBody.getElementsByTagName("tr").length - 1;
-                    const url = window.location.href.split("?")[0] + `?order=<?php echo $order ?>&offset=${offset}`;
-                    fetch(url)
-                        .then(response => response.text())
-                        .then(html => {
-                            // Create a new temporary div to store the response HTML
-                            const tempDiv = document.createElement("div");
-                            tempDiv.innerHTML = html;
-                            // Get the new rows from the temporary div
-                            const newRows = tempDiv.querySelectorAll("#table-body tr");
-                            // Remove the old "Load More" button
-                            loadMoreBtn.parentNode.removeChild(loadMoreBtn);
-                            // Append the new rows to the table
-                            for (let i = 0; i < newRows.length; i++) {
-                                tableBody.appendChild(newRows[i]);
-                            }
-                            // Add a new "Load More" button if there are more results
-                            const newLoadMoreBtn = tempDiv.querySelector("#load-more-btn");
-                            if (newLoadMoreBtn) {
-                                tableBody.parentNode.insertBefore(newLoadMoreBtn, tableBody.nextSibling);
-                            }
-                        })
-                        .catch(error => {
-                            console.error(error);
-                        });
-                });
-            }
-        </script>
-    </section>
+    </div>
+</section>
+</html>

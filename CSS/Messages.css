@@ -52,4 +52,17 @@
 .data-table{
     margin: auto;
     color: white;
+    text-decoration: none;
+}
+.ascending{
+    text-decoration: none;
+    color: white;
+}
+.descending{
+    text-decoration: none;
+    color: white;
+}
+.pagination{
+    text-decoration: none;
+    color: black;
 }

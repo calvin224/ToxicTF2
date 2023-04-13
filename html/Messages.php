@@ -1,7 +1,7 @@
 <?php
 $wall_paper = "Product.jpg";
-
 ?>
+
 <html>
 <head>
     <title>ToxicityChecker.tf</title>
@@ -23,11 +23,11 @@ $wall_paper = "Product.jpg";
         }
     </style>
 </div>
-</body>
-</body>
 <section class="search-bar">
-    <form method="GET">
-        <input type="text" name="search" placeholder="Search...">
+    <form method="GET" action="">
+        <input type="text" name="name" placeholder="Search by Name...">
+        <input type="text" name="steamid" placeholder="Search by Steam ID...">
+        <input type="text" name="search" placeholder="Search by Message...">
         <button type="submit">Go</button>
     </form>
 </section>
@@ -42,10 +42,12 @@ $wall_paper = "Product.jpg";
             <tr>
                 <th>SteamId</th>
                 <th>Name</th>
+                <th>Steam Id</th>
                 <th>Message</th>
                 <th>Toxicity Level</th>
-                <th>Identity hate</th>
                 <th>threat</th>
+                <th>identity hate</th>
+
             </tr>
             </thead>
             <tbody id="table-body">
@@ -64,7 +66,25 @@ $wall_paper = "Product.jpg";
             $offset = isset($_GET['offset']) ? $_GET['offset'] : 0;
 
             // Get messages and their toxicity level
-            $sql = "SELECT steamid,Name, commenttext, toxic,identityhate,threat FROM chatlogs ORDER BY toxic $order LIMIT 5000";
+
+            $name = isset($_GET['name']) ? $_GET['name'] : '';
+            $steamid = isset($_GET['steamid']) ? $_GET['steamid'] : '';
+            $searchTerm = isset($_GET['search']) ? $_GET['search'] : '';
+            $sql = "SELECT Name, steamid, commenttext, toxic, identityhate, threat FROM chatlogs ";
+            if (!empty($name) || !empty($steamid) || !empty($searchTerm)) {
+                $sql .= "WHERE ";
+                if (!empty($name)) {
+                    $sql .= "Name LIKE '%$name%' AND ";
+                }
+                if (!empty($steamid)) {
+                    $sql .= "steamid LIKE '%$steamid%' AND ";
+                }
+                if (!empty($searchTerm)) {
+                    $sql .= "commenttext LIKE '%$searchTerm%' AND ";
+                }
+                $sql = rtrim($sql, ' AND ');
+            }
+            $sql .= " ORDER BY toxic $order LIMIT 500";
             $result = mysqli_query($conn, $sql);
             echo(mysqli_num_rows($result));
 
@@ -79,7 +99,23 @@ $wall_paper = "Product.jpg";
             $offset = ($currentPage - 1) * $limit;
 
             // Get messages and their toxicity level for current page
-            $sql = "SELECT steamid,Name, commenttext, toxic,identityhate,threat FROM chatlogs ORDER BY toxic $order LIMIT $limit OFFSET $offset";
+
+            $sql = "SELECT Name, steamid, commenttext, toxic, identityhate, threat FROM chatlogs ";
+            if (!empty($name) || !empty($steamid) || !empty($searchTerm)) {
+                $sql .= "WHERE ";
+                if (!empty($name)) {
+                    $sql .= "Name LIKE '%$name%' AND ";
+                }
+                if (!empty($steamid)) {
+                    $sql .= "steamid LIKE '%$steamid%' AND ";
+                }
+                if (!empty($searchTerm)) {
+                    $sql .= "commenttext LIKE '%$searchTerm%' AND ";
+                }
+                $sql = rtrim($sql, ' AND ');
+            }
+            $sql .= " ORDER BY toxic $order LIMIT $limit OFFSET $offset";
+
             $result = mysqli_query($conn, $sql);
             // Set default values
             $searchTerm = '';
@@ -99,10 +135,12 @@ $wall_paper = "Product.jpg";
                     echo "<tr>";
                     echo "<td>" . $row["steamid"] . "</td>";
                     echo "<td>" . $row["Name"] . "</td>";
+                    echo "<td>" . $row["steamid"] . "</td>";
                     echo "<td>" . $row["commenttext"] . "</td>";
                     echo "<td>" . $row["toxic"] . "</td>";
-                    echo "<td>" . $row["identityhate"] . "</td>";
+
                     echo "<td>" . $row["threat"] . "</td>";
+                    echo "<td>" . $row["identityhate"] . "</td>";
 
                     echo "</tr>";
                 }
@@ -117,6 +155,15 @@ $wall_paper = "Product.jpg";
             for ($i = $startPage; $i <= $endPage; $i++) {
                 $isActive = ($i == $currentPage) ? 'active' : '';
                 $url = "?order=$order&page=$i";
+                if (!empty($name)) {
+                    $url .= "&name=$name";
+                }
+                if (!empty($steamid)) {
+                    $url .= "&steamid=$steamid";
+                }
+                if (!empty($searchTerm)) {
+                    $url .= "&search=$searchTerm";
+                }
                 echo "<a class='$isActive' href='$url'> $i </a>";
             }
             echo "</div>";

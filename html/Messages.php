@@ -33,19 +33,21 @@ $wall_paper = "Product.jpg";
 </section>
 <section class="data-table">
     <p>Sort by toxicity level:
-        <a href="?order=asc">Ascending</a>
-        <a href="?order=desc">Descending</a>
+        <a class = "ascending" href="?order=asc">Ascending</a>
+        <a class = "descending" href="?order=desc">Descending</a>
     </p>
     <div class="table-container">
         <table>
             <thead>
             <tr>
+                <th>SteamId</th>
                 <th>Name</th>
                 <th>Steam Id</th>
                 <th>Message</th>
                 <th>Toxicity Level</th>
                 <th>threat</th>
                 <th>identity hate</th>
+
             </tr>
             </thead>
             <tbody id="table-body">
@@ -64,6 +66,7 @@ $wall_paper = "Product.jpg";
             $offset = isset($_GET['offset']) ? $_GET['offset'] : 0;
 
             // Get messages and their toxicity level
+
             $name = isset($_GET['name']) ? $_GET['name'] : '';
             $steamid = isset($_GET['steamid']) ? $_GET['steamid'] : '';
             $searchTerm = isset($_GET['search']) ? $_GET['search'] : '';
@@ -96,6 +99,7 @@ $wall_paper = "Product.jpg";
             $offset = ($currentPage - 1) * $limit;
 
             // Get messages and their toxicity level for current page
+
             $sql = "SELECT Name, steamid, commenttext, toxic, identityhate, threat FROM chatlogs ";
             if (!empty($name) || !empty($steamid) || !empty($searchTerm)) {
                 $sql .= "WHERE ";
@@ -111,18 +115,33 @@ $wall_paper = "Product.jpg";
                 $sql = rtrim($sql, ' AND ');
             }
             $sql .= " ORDER BY toxic $order LIMIT $limit OFFSET $offset";
+
             $result = mysqli_query($conn, $sql);
+            // Set default values
+            $searchTerm = '';
+            $whereClause = '';
+
+            // Check if a search term was submitted
+            if (isset($_GET['search'])) {
+                // Sanitize the search term to prevent SQL injection
+                $searchTerm = mysqli_real_escape_string($conn, $_GET['search']);
+                // Add the search term to the WHERE clause
+                $whereClause = "WHERE Name LIKE '%$searchTerm%' OR commenttext LIKE '%$searchTerm%'";
+            }
 
             if (mysqli_num_rows($result) > 0) {
                 // Output data of each row
                 while($row = mysqli_fetch_assoc($result)) {
                     echo "<tr>";
+                    echo "<td>" . $row["steamid"] . "</td>";
                     echo "<td>" . $row["Name"] . "</td>";
                     echo "<td>" . $row["steamid"] . "</td>";
                     echo "<td>" . $row["commenttext"] . "</td>";
                     echo "<td>" . $row["toxic"] . "</td>";
+
                     echo "<td>" . $row["threat"] . "</td>";
                     echo "<td>" . $row["identityhate"] . "</td>";
+
                     echo "</tr>";
                 }
             } else {
@@ -155,5 +174,12 @@ $wall_paper = "Product.jpg";
             </tbody>
         </table>
     </div>
+    <script>
+        // Get the search term from the URL
+        const searchParams = new URLSearchParams(window.location.search);
+        const searchTerm = searchParams.get('search');
+        // Construct the URL for loading more results
+        const url = window.location.href.split("?")[0] + `?order=<?php echo $order ?>&offset=${offset}&search=${searchTerm}`;
+    </script>
 </section>
 </html>

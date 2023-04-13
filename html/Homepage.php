@@ -15,7 +15,6 @@ $wall_paper = "Product.jpg";
 <div class="top-bar">
     <a href="Messages.php">Chat logs</a>
     <a href="about.php">About</a>
-    <a href="">Sign in</a>
 </div>
 <style>
     body {

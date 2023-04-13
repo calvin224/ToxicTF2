@@ -42,7 +42,6 @@ $wall_paper = "Product.jpg";
             <tr>
                 <th>SteamId</th>
                 <th>Name</th>
-                <th>Steam Id</th>
                 <th>Message</th>
                 <th>Toxicity Level</th>
                 <th>threat</th>
@@ -129,19 +128,18 @@ $wall_paper = "Product.jpg";
                 $whereClause = "WHERE Name LIKE '%$searchTerm%' OR commenttext LIKE '%$searchTerm%'";
             }
 
+
             if (mysqli_num_rows($result) > 0) {
                 // Output data of each row
                 while($row = mysqli_fetch_assoc($result)) {
                     echo "<tr>";
                     echo "<td>" . $row["steamid"] . "</td>";
                     echo "<td>" . $row["Name"] . "</td>";
-                    echo "<td>" . $row["steamid"] . "</td>";
                     echo "<td>" . $row["commenttext"] . "</td>";
                     echo "<td>" . $row["toxic"] . "</td>";
-
                     echo "<td>" . $row["threat"] . "</td>";
                     echo "<td>" . $row["identityhate"] . "</td>";
-
+                    echo "<td><a href='https://steamcommunity.com/profiles/" . $row["steamid"] . "'>View Steam Profile</a></td>";
                     echo "</tr>";
                 }
             } else {

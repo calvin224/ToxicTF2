@@ -29,6 +29,7 @@ $wall_paper = "Product.jpg";
         <input type="text" name="steamid" placeholder="Search by Steam ID...">
         <input type="text" name="search" placeholder="Search by Message...">
         <button type="submit">Go</button>
+        <button onclick="clearSearch()">Clear Search</button>
     </form>
 </section>
 <section class="data-table">
@@ -178,6 +179,10 @@ $wall_paper = "Product.jpg";
         const searchTerm = searchParams.get('search');
         // Construct the URL for loading more results
         const url = window.location.href.split("?")[0] + `?order=<?php echo $order ?>&offset=${offset}&search=${searchTerm}`;
+        function clearSearch() {
+            document.getElementById("search").value = "";
+            location.reload();
+        }
     </script>
 </section>
 </html>
